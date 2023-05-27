@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/style/bootstrap.css">
+  <link rel="stylesheet" href="/style/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Foundation:wght@400;500;700&family=Jolly+Lodger&display=swap" rel="stylesheet">
+
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+
+  <title>Tipos de Pokemon</title>
+</head>
+
+<body onload="mostrarPokemon(),traerCompra()" class="backgroundType">
+  <div class="fondo">
+    <div class="container-fluid">
+      <div class="row d-flex align-content-center shadow p-3 mb-5 rounded" style="width: 100%; position: fixed; background-color: rgba(10, 185, 25, 0.665);">
+        <h1 class="text-titulo" id="categorias"></h1>
+        <button class="boton-carrito" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
+          aria-controls="offcanvasRight"><img src="https://cdn-icons-png.flaticon.com/512/6713/6713723.png" alt=""
+            style="height: 24px;"> <span class="badge bg-secondary" id="cant-item"></span></button>
+
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+          <div class="offcanvas-header">
+            <h3 id="offcanvasRightLabel" class="text-titulo">Carrito de compra</h3>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body bg-teal">
+            <div class="carrito-compras"></div>
+          </div>
+          <div class="offcanvas-footer text-center" >
+            <div style="display: flex; flex-direction: row; justify-content: center; margin: 10px;">
+              <label class="text-titulo" for="" style="width: 30%;">Total pagar</label>
+              <input type="number" id="total-compra" style="width: 25%;" readonly>
+              <label for="" class="text-titulo" style="width: 10px;">$</label>
+
+            </div>
+           
+            <a href="" class="btn btn-primary">finalizar Compra</a>
+          </div>
+        </div>
+      </div>
+      <div class="row justify-content-center" id="listPokemon" style="padding-top: 100px;">
+        
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
+<script src="/js/drag.js"></script>
+<script>
+  const pokemon = [];
+  const carritoCompras = [];
+  var categoria = ""
+
+  function ActualizarCantidad(element, indice){
+    console.log(element.value);
+    console.log(indice);
+    carritoCompras[indice]._cantidad = element.value;
+    localStorage.datosPokemon = JSON.stringify(carritoCompras);
+    carritoPokemon();
+  }
+  function traerDatos() {
+    return new Promise(response => {
+      let url = localStorage.url;
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById("categorias").innerHTML = `Pokemon tipo ${data.name}`;
+       
+          data.pokemon.forEach(element => {
+            pokemon.push(element);
+            detallePokemon(element)
+            categoria = data.name
+          });
+        
+          response("Hola")
+        })
+
+    })
+  }
+
+  function mostrarPokemon() {
+
+    return new Promise((resolve) => {
+      let listaPokemon = ""
+      traerDatos()
+        .then(response => {
+          pokemon.forEach(element => {
+            listaPokemon += `<div class="card-pokemon" style="max-width: 540px;" id="card${element.pokemon.name}" ondragstart="drag(event)" draggable="true">
+                              <div class="row g-0">
+                                <div class="col-md-4 mt-4">
+                                  <a onclick="infoPokemon('${element.pokemon.url}')" href="pokemoninfo.html">
+                                      <img id="img${element.pokemon.name}" src="" class="card-img-top shadow p-3 mb-5 rounded" alt="...">
+                                  </a>
+                                </div>
+                                <div class="col-md-6 m-3">
+                                  <div class="card-body shadow-lg p-3 mb-5 rounded ms-5" style="background-color: rgb(140, 189, 232);">
+                                    <h5 class="card-title">${element.pokemon.name}</h5>
+                                    <p id="desc${element.pokemon.name}" class="card-text"></p>
+                                    <p id="tipos${element.pokemon.name}" class="card-text"></p> 
+                                    <p id="precio${element.pokemon.name}" class="card-text"></p> 
+                                    <span>cantidad</span>
+                                    <input class="cantidad-pokemon" id="cant${element.pokemon.name}" type="number" min="1" max="10">                               
+                                  </div>
+                                </div>
+                                
+                              </div>
+                            </div>`
+          })
+          document.getElementById("listPokemon").innerHTML = listaPokemon
+          resolve("lista ok");
+        })
+    });
+  }
+  function drag(ev){
+    switch (ev.target.nodeName){
+      case "DIV":
+        name = ev.target.id.slice(4);
+        break;
+      case "IMG":
+        name = ev.target.id.slice(3);
+        break;
+    }
+    ev.dataTransfer.setData("name", name);
+  }
+  const cartaPokemon = document.querySelector('.card-pokemon');
+  const botonCarrito = document.querySelector('.boton-carrito');
+  const divCarrito = document.querySelector('.carrito-compras');
+
+  divCarrito.addEventListener('dragover', e => {
+    e.preventDefault();
+  })
+  divCarrito.addEventListener('drop', e => {
+    recuperarPokemon(e.dataTransfer.getData("name"));
+    //**************************************************************************************************
+  });
+
+  function recuperarPokemon(name){
+    console.log(name);
+    fetch("https://pokeapi.co/api/v2/pokemon/" + name)
+    .then((response) => response.json())
+    .then((data) => {
+      let cantidad = document.getElementById(`cant${name}`).value;
+      if (cantidad >=1){
+        let pokemon = new Pokemon(
+          data.name,
+          cantidad,
+          data.base_experience*100,
+          data.sprites.other["official-artwork"].front_default
+        );
+        carritoCompras.push(pokemon);
+        localStorage.datosPokemon = JSON.stringify(carritoCompras);
+        carritoPokemon();
+
+      }else{
+        alert('cantidad incorrecta')
+      }
+
+    })
+  }
+  function carritoPokemon(){
+    const pokemonCarrito = document.querySelector('.carrito-compras');
+    pokemonCarrito.innerHTML='';
+    let sum = 0;
+      carritoCompras.forEach((pokemon,index) => {
+          const item = document.createElement('div');
+          item.innerHTML = `<img src="${pokemon._imagen}" alt="" style="width: 100px;"><p>${pokemon._nombre}<br><input type="number" value="${pokemon._cantidad}" onclick="ActualizarCantidad(this,${index})" onkeyup="ActualizarCantidad(this,${index})"><br>$ ${pokemon._precio*pokemon._cantidad}</p><button class="boton-eliminar" onclick="Eliminar(${index})">X</button>`
+          item.className = 'item-carrito';
+          pokemonCarrito.appendChild(item);
+          sum += pokemon._cantidad*pokemon._precio;
+      })
+      const cantboton = document.getElementById('cant-item');
+          cantboton.textContent = carritoCompras.length;
+          const totalPagar = document.getElementById('total-compra');
+          totalPagar.value = sum;
+  };
+  function traerCompra(){
+    let datos = JSON.parse(localStorage.datosPokemon);
+    console.log(datos);
+    datos.forEach(element =>{
+      carritoCompras.push(element);
+      carritoPokemon()
+    })
+  }
+  function Eliminar(index){
+    carritoCompras.splice(index,1);
+    localStorage.datosPokemon = JSON.stringify(carritoCompras);
+    carritoPokemon()
+  }
+
+  botonCarrito.addEventListener('dragenter', e => {
+    const offcanvas = document.getElementById('offcanvasRight');
+    const offcanvasInstance = new bootstrap.Offcanvas(offcanvas);
+    offcanvasInstance.show();
+  });
+  function infoPokemon(urlp) {
+    localStorage.urlpokemon = urlp
+  }
+
+
+  function detallePokemon(pokemon) {
+    fetch(pokemon.pokemon.url)
+      .then(response => response.json())
+      .then(data => {
+        let imagen = data.sprites.other["official-artwork"].front_default
+        let altura = (data.height * 0.1).toFixed(1)
+        let peso = (data.weight * 0.1).toFixed(1)
+        let numero = data.order
+        let precio = data.base_experience*100
+        console.log(pokemon.pokemon.name)
+        document.getElementById(`img${pokemon.pokemon.name}`).src = imagen
+        document.getElementById(`desc${pokemon.pokemon.name}`).innerText = `peso: ${peso}Kg \n \n altura: ${altura}Mts \n \n order:#${numero}`
+        document.getElementById(`precio${pokemon.pokemon.name}`).innerText =`precio: $${precio}`
+        console.log(categoria)
+        let tipos = "tipo(s) "
+        data.types.forEach(element => {
+          if (element.type.name == categoria) {
+            tipos += `${element.type.name} `
+          } else {
+            tipos += `<a onclick="localUrlPokemon('${element.type.url}')" href="typesPokemon.html">${element.type.name}</a> `
+          }
+
+        })
+        document.getElementById(`tipos${pokemon.pokemon.name}`).innerHTML = tipos
+      })
+  }
+  function localUrlPokemon(urlType) {
+    localStorage.setItem("url", urlType)
+  }
+</script>
+<script src="/js/bootstrap.js"></script>

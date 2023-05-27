@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style/bootstrap.css" />
+    <title>Pokemon</title>
+  </head>
+
+  <body onload="cargarPokemon()">
+    <div class="container-fluid">
+      <div
+        class="row justify-content-center"
+        style="
+          background-image: url('https://cdn.arstechnica.net/wp-content/uploads/2020/03/pokego-800x420.jpg');
+          background-repeat: no-repeat;
+          background-size: contain;
+        "
+      >
+        <div class="col-10">
+          <div id="contenedor-pokemon" class="" style="width: 100%"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+<script>
+  function cargarPokemon() {
+    txtComando = "";
+    return new Promise((response) => {
+      let urlpokemon = localStorage.urlpokemon;
+      fetch(urlpokemon)
+        .then((response) => response.json())
+        .then((data) => {
+          let imagen = data.sprites.other["official-artwork"].front_default;
+
+          document.getElementById(
+            "contenedor-pokemon"
+          ).innerHTML = `<div class="card" style="width: 50%;">
+                                        <div class="card-body bg-success">
+                                            <h5 class="card-title">${data.name}</h5>
+                                            <p id="textoCaracter" class="card-text">#${data.id}</p>
+                                        </div>
+                                        <div class="d-flex justify-content-center">
+                                            <img src="${imagen}" class="card-img-top" alt="..." style="width:50%">
+                                        </div>
+                                        
+                                        
+                                        <ul class="list-group list-group-flush ">
+                                            <li class="list-group-item bg-success">Peso: ${data.weight}</li>
+                                            <li class="list-group-item">Ataque: ${data.moves[0].move.name}</li>                                            
+                                        </ul>
+
+                                        <div class="row d-flex">
+                                            <div class="col-5">
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item bg-success">${data.stats[0].stat.name}: ${data.stats[0].base_stat}</li>
+                                                    <li class="list-group-item">${data.stats[1].stat.name}: ${data.stats[1].base_stat}</li>
+                                                    <li class="list-group-item bg-success">${data.stats[2].stat.name}: ${data.stats[2].base_stat}</li>                                            
+                                                </ul>
+                                            </div>
+                                            <div class="col-5">
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item bg-success">${data.stats[3].stat.name}: ${data.stats[3].base_stat}</li>
+                                                     <li class="list-group-item">${data.stats[4].stat.name}: ${data.stats[4].base_stat}</li>
+                                                    <li class="list-group-item bg-success">${data.stats[5].stat.name}: ${data.stats[5].base_stat}</li>
+                                            
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+
+                                        
+                                            
+                                        <div class="card-body">
+                                        <a  href="index.html" class="card-link btn btn-danger">Inicio</a>
+                                        <a href="typesPokemon.html" class="card-link btn btn-warning">Volver</a>
+                                        </div>
+                                    </div>`;
+          caracteristicaPokemon(`${data.id}`);
+        });
+    });
+  }
+  function caracteristicaPokemon(id) {
+    fetch(`https://pokeapi.co/api/v2/characteristic/${id}`)
+      .then((response) => response.json())
+      .then((data) => {
+        let caracteristica = data.descriptions[5].description;
+        document.getElementById("textoCaracter").innerText = caracteristica;
+      });
+  }
+</script>
